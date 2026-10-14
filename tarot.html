@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>塔罗占卜 · 哥哥的占卜屋</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --night-deep:#1b1533;
+    --night-mid:#2c2154;
+    --night-light:#3d2e6b;
+    --gold:#d4af6a;
+    --gold-light:#f0d9a8;
+    --paper:#fbf3e2;
+    --ink:#2a2237;
+    --ink-soft:#463a5c;
+    --rose:#c96b8a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Noto Sans SC','PingFang SC',sans-serif;
+    background:
+      radial-gradient(700px 400px at 15% -5%, rgba(240,217,168,0.12), transparent 60%),
+      radial-gradient(900px 500px at 90% 10%, rgba(201,107,138,0.10), transparent 55%),
+      linear-gradient(160deg,#1b1533 0%, #241b47 60%, #1b1533 100%);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:22px 12px 40px;
+  }
+  .stage{
+    width:100%;
+    max-width:460px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  header{ text-align:center; }
+  header h1{
+    margin:0;
+    font-family:'Noto Serif SC',serif;
+    font-weight:900;
+    font-size:24px;
+    color:var(--gold-light);
+    letter-spacing:2px;
+    text-shadow:0 0 14px rgba(212,175,106,0.35);
+  }
+  header .sub{
+    display:block;
+    margin-top:4px;
+    font-size:12px;
+    color:#b7abd6;
+    letter-spacing:2px;
+  }
+
+  .bubble-wrap{ position:relative; width:100%; display:flex; justify-content:center; padding-top:6px; }
+  .seal{
+    position:absolute; left:14px; top:-10px; width:34px; height:34px;
+    background:linear-gradient(145deg,var(--rose),#a8446a);
+    color:#fff8f0; font-family:'Noto Serif SC',serif; font-weight:900; font-size:16px;
+    display:flex; align-items:center; justify-content:center; border-radius:6px;
+    transform:rotate(-8deg);
+    box-shadow:0 3px 10px rgba(120,30,60,0.5), inset 0 0 0 1.5px rgba(255,255,255,0.2);
+    z-index:2;
+  }
+  .bubble{
+    position:relative; max-width:360px; min-height:22px;
+    background:var(--paper); border:1.5px dashed var(--gold);
+    border-radius:16px; padding:12px 18px 12px 34px;
+    font-family:'Noto Serif SC',serif; font-weight:500; font-size:14px; line-height:1.55;
+    color:var(--ink-soft);
+    box-shadow:0 6px 18px rgba(0,0,0,0.35);
+    text-align:center;
+  }
+  .bubble::after{
+    content:""; position:absolute; left:50%; bottom:-9px; transform:translateX(-50%);
+    width:16px; height:16px; background:var(--paper);
+    border-right:1.5px dashed var(--gold); border-bottom:1.5px dashed var(--gold);
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+  }
+  .bubble span{ display:inline-block; animation:floatIn .35s ease; }
+  @keyframes floatIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  .deck-frame{
+    width:100%;
+    background:linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border:1px solid rgba(212,175,106,0.35);
+    border-radius:18px;
+    padding:16px;
+    box-shadow:0 16px 34px rgba(0,0,0,0.4), inset 0 0 24px rgba(212,175,106,0.05);
+  }
+  .deck-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:9px;
+  }
+  .card-back{
+    aspect-ratio:2/3.1;
+    border-radius:8px;
+    background:
+      repeating-linear-gradient(135deg, rgba(212,175,106,0.10) 0 2px, transparent 2px 10px),
+      linear-gradient(150deg,#3d2e6b,#241b47);
+    border:1px solid rgba(212,175,106,0.5);
+    box-shadow:0 4px 10px rgba(0,0,0,0.35);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:15px;
+    color:rgba(212,175,106,0.55);
+    transition:transform .15s ease, box-shadow .15s ease, opacity .3s ease;
+    user-select:none;
+  }
+  .card-back:hover:not(.chosen):not(.dim){
+    transform:translateY(-4px);
+    box-shadow:0 10px 18px rgba(0,0,0,0.45);
+  }
+  .card-back.dim{ opacity:0.25; pointer-events:none; }
+  .card-back.chosen{
+    background:linear-gradient(150deg,var(--paper),#f4e8cf);
+    border-color:var(--gold);
+    color:var(--ink);
+    font-size:26px;
+    transform:scale(1.08);
+    box-shadow:0 0 18px 3px rgba(212,175,106,0.55);
+    animation:pop .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes pop{ 0%{transform:scale(0.7); opacity:0.3;} 100%{transform:scale(1.08); opacity:1;} }
+
+  .result-panel{
+    display:none;
+    width:100%;
+    background:linear-gradient(160deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    border:1px solid rgba(212,175,106,0.35);
+    border-radius:18px;
+    padding:18px;
+    gap:16px;
+    align-items:flex-start;
+    box-shadow:0 16px 34px rgba(0,0,0,0.4);
+    animation:fadeUp .4s ease;
+  }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .result-card{
+    flex:0 0 auto;
+    width:84px;
+    aspect-ratio:2/3.1;
+    border-radius:10px;
+    background:linear-gradient(150deg,var(--paper),#f4e8cf);
+    border:2px solid var(--gold);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:38px;
+    box-shadow:0 0 20px rgba(212,175,106,0.45);
+  }
+  .result-text{ flex:1; min-width:0; }
+  .result-text h2{
+    margin:0 0 4px;
+    font-family:'Noto Serif SC',serif;
+    font-size:18px;
+    color:var(--gold-light);
+  }
+  .result-orient{
+    display:inline-block;
+    font-size:11px;
+    font-weight:700;
+    color:var(--night-deep);
+    background:var(--gold-light);
+    padding:2px 8px;
+    border-radius:999px;
+    margin-bottom:8px;
+  }
+  .result-keywords{
+    font-size:12px;
+    color:#c9bfe3;
+    margin-bottom:8px;
+    letter-spacing:0.5px;
+  }
+  .result-meaning{
+    margin:0;
+    font-size:13.5px;
+    line-height:1.7;
+    color:#e8e1f7;
+  }
+
+  .status{
+    font-size:13px; color:#b7abd6; min-height:16px; text-align:center;
+  }
+  .controls{ display:flex; gap:12px; }
+  button{
+    font-family:'Noto Sans SC',sans-serif; font-size:13.5px; font-weight:700;
+    padding:9px 22px; border:none; border-radius:999px;
+    background:linear-gradient(160deg,var(--rose),#a8446a); color:#fff8f0; cursor:pointer;
+    box-shadow:0 4px 12px rgba(120,30,60,0.4);
+    transition:transform .12s ease, box-shadow .12s ease;
+    letter-spacing:1px;
+  }
+  button:hover{ transform:translateY(-1px); box-shadow:0 6px 16px rgba(120,30,60,0.5); }
+  button:active{ transform:translateY(0); }
+</style>
+</head>
+<body>
+<div class="stage">
+  <header>
+    <h1>塔 罗 占 卜</h1>
+    <span class="sub">哥 哥 的 占 卜 屋</span>
+  </header>
+
+  <div class="bubble-wrap">
+    <div class="seal">霁</div>
+    <div class="bubble"><span id="bubbleText">来来来，哥哥给你占一卦～</span></div>
+  </div>
+
+  <div class="deck-frame">
+    <div class="deck-grid" id="deckGrid"></div>
+  </div>
+
+  <div class="result-panel" id="resultPanel">
+    <div class="result-card" id="resultCardFace"></div>
+    <div class="result-text">
+      <h2 id="resultName"></h2>
+      <div class="result-orient" id="resultOrient"></div>
+      <div class="result-keywords" id="resultKeywords"></div>
+      <p class="result-meaning" id="resultMeaning"></p>
+    </div>
+  </div>
+
+  <div class="status" id="status">从下面选一张牌吧～</div>
+
+  <div class="controls">
+    <button id="drawAgainBtn">🔮 重新洗牌</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const GRID_COUNT = 12;
+
+  const MAJOR_ARCANA = [
+    {roman:"0", name:"愚人", emoji:"🌄",
+     kwUp:["新的开始","冒险","纯真"], meaningUp:"象征全新的起点和未知的旅程。放下顾虑，勇敢迈出第一步，眼前的空白页正等你书写。",
+     kwRev:["冲动","犹豫","盲目"], meaningRev:"提醒你别太随性冲动，出发前先想清楚方向，别为了图新鲜而忽略了脚下的风险。"},
+    {roman:"I", name:"魔术师", emoji:"✨",
+     kwUp:["创造力","行动力","资源"], meaningUp:"你手上的资源已经够用了，是时候把想法变成行动。相信自己的能力，主动出击。",
+     kwRev:["拖延","三心二意","能力错配"], meaningRev:"提醒你别光想不做，或者用错了方法。先理清思路，再重新出发。"},
+    {roman:"II", name:"女祭司", emoji:"🌙",
+     kwUp:["直觉","内省","神秘"], meaningUp:"答案不在外面，在你心里。这段时间适合安静下来，倾听自己的直觉。",
+     kwRev:["压抑直觉","信息不足","浮躁"], meaningRev:"你可能太忽略自己的直觉了，或者是有些事被刻意隐藏了。别急着下结论。"},
+    {roman:"III", name:"皇后", emoji:"🌾",
+     kwUp:["丰盛","滋养","创造"], meaningUp:"代表富足、爱与滋养，无论是感情还是事业，这都是收获和成长的好时机。",
+     kwRev:["过度付出","停滞","依赖"], meaningRev:"提醒你别把自己耗得太干，照顾别人之前先照顾好自己。"},
+    {roman:"IV", name:"皇帝", emoji:"👑",
+     kwUp:["掌控","秩序","稳定"], meaningUp:"代表结构和权威，是时候用理性和规则把局面稳住，做那个说了算的人。",
+     kwRev:["专制","失控","僵化"], meaningRev:"提醒你别太固执己见，太想掌控一切反而容易适得其反。"},
+    {roman:"V", name:"教皇", emoji:"🕊️",
+     kwUp:["传统","指引","认同"], meaningUp:"象征传统智慧和来自他人的指点，这时候听听长辈或过来人的建议会很有帮助。",
+     kwRev:["墨守成规","叛逆","质疑权威"], meaningRev:"提醒你别被条条框框困住，有些规矩该打破的时候就该打破。"},
+    {roman:"VI", name:"恋人", emoji:"💞",
+     kwUp:["爱情","选择","连接"], meaningUp:"代表真挚的情感连接，也可能是一次重要的选择，听从内心最真实的声音。",
+     kwRev:["失衡","犹豫不决","价值观冲突"], meaningRev:"提醒你这段关系或这个选择里可能有些不对等，需要重新沟通和权衡。"},
+    {roman:"VII", name:"战车", emoji:"🐎",
+     kwUp:["意志力","胜利","前进"], meaningUp:"凭着坚定的意志和决心，你能排除干扰、勇往直前，这是属于你的胜利时刻。",
+     kwRev:["方向不明","失控","内耗"], meaningRev:"提醒你别蛮干，先想清楚方向再发力，不然容易原地打转。"},
+    {roman:"VIII", name:"力量", emoji:"🦁",
+     kwUp:["勇气","温柔的坚定","内在力量"], meaningUp:"真正的力量不是强硬，而是温柔而坚定。你比自己想象中更有韧性。",
+     kwRev:["自我怀疑","力不从心","情绪失控"], meaningRev:"提醒你别太苛责自己，允许自己暂时脆弱一下，也是一种力量。"},
+    {roman:"IX", name:"隐士", emoji:"🏮",
+     kwUp:["独处","反思","智慧"], meaningUp:"这段时间适合暂时抽离喧嚣，独自静一静，答案往往在安静中浮现。",
+     kwRev:["孤立","逃避","固执"], meaningRev:"提醒你别把自己关太久，适度的独处是充电，过度的孤立就是逃避了。"},
+    {roman:"X", name:"命运之轮", emoji:"🎡",
+     kwUp:["转折","机遇","周期"], meaningUp:"生活正在翻开新的一页，一些意想不到的转机可能就在眼前，顺势而为吧。",
+     kwRev:["阻碍","时机未到","反复"], meaningRev:"提醒你现在可能不是最好的时机，耐心等一等，风向会变的。"},
+    {roman:"XI", name:"正义", emoji:"⚖️",
+     kwUp:["公平","决断","因果"], meaningUp:"代表理性的判断和公正的结果，种什么因得什么果，问心无愧地往前走。",
+     kwRev:["不公","逃避责任","偏见"], meaningRev:"提醒你可能有些事被处理得不太公平，或者是自己在回避该承担的责任。"},
+    {roman:"XII", name:"倒吊人", emoji:"🌀",
+     kwUp:["换个角度","暂停","放手"], meaningUp:"暂时的停滞不是坏事，换个角度看问题，你会发现新的可能性。",
+     kwRev:["无谓的牺牲","停滞不前","抗拒改变"], meaningRev:"提醒你别一直死撑着不肯放手，有些牺牲其实没有意义。"},
+    {roman:"XIII", name:"死神", emoji:"🦋",
+     kwUp:["蜕变","结束","新生"], meaningUp:"代表一个阶段的结束和另一个阶段的开始，是蜕变不是终结，放下才能轻装上阵。",
+     kwRev:["抗拒改变","停滞","难以释怀"], meaningRev:"提醒你可能在抗拒一些本该发生的改变，越抗拒越难受，试着顺其自然。"},
+    {roman:"XIV", name:"节制", emoji:"🌈",
+     kwUp:["平衡","调和","耐心"], meaningUp:"代表恰到好处的平衡，把不同的东西融合在一起，耐心会带来意想不到的和谐。",
+     kwRev:["失衡","走极端","急躁"], meaningRev:"提醒你最近是不是有点走极端了，试着让自己慢下来，找回节奏。"},
+    {roman:"XV", name:"恶魔", emoji:"⛓️",
+     kwUp:["束缚","诱惑","执念"], meaningUp:"提醒你注意一些让自己上瘾或放不下的执念，看清它，才有机会挣脱它。",
+     kwRev:["觉醒","挣脱束缚","重获自由"], meaningRev:"是个好消息哦，代表你正在或即将挣脱某种束缚，重新拿回主导权。"},
+    {roman:"XVI", name:"高塔", emoji:"⚡",
+     kwUp:["突变","打破","觉醒"], meaningUp:"代表一次突如其来的变化，看似冲击，实际是在打破不真实的假象，之后会更清醒。",
+     kwRev:["延迟的震荡","恐惧改变","内在崩塌"], meaningRev:"变化可能会来得慢一点，但迟早要面对，与其提心吊胆，不如主动调整。"},
+    {roman:"XVII", name:"星星", emoji:"⭐",
+     kwUp:["希望","疗愈","信念"], meaningUp:"代表希望和疗愈，黑夜之后总会有星光，眼下的处境正在慢慢变好。",
+     kwRev:["失去信心","理想落空","迷茫"], meaningRev:"提醒你别灰心太早，暂时看不到光不代表光不存在，再坚持一下。"},
+    {roman:"XVIII", name:"月亮", emoji:"🌘",
+     kwUp:["潜意识","不确定","幻象"], meaningUp:"代表一些还看不清的、朦胧的事情，情绪和直觉会比逻辑更靠谱一些。",
+     kwRev:["真相浮现","走出迷雾","恐惧消散"], meaningRev:"是个好兆头，代表困扰你许久的迷雾正在散去，真相快要浮出水面了。"},
+    {roman:"XIX", name:"太阳", emoji:"☀️",
+     kwUp:["喜悦","成功","活力"], meaningUp:"这是塔罗牌里最正能量的一张，代表快乐、成功和满满的生命力，好好享受这份明亮。",
+     kwRev:["暂时低落","被乌云遮蔽","过度乐观"], meaningRev:"提醒你可能暂时状态不在线，或是把事情想得太简单了，给自己一点缓冲的时间。"},
+    {roman:"XX", name:"审判", emoji:"🔔",
+     kwUp:["觉醒","重生","总结"], meaningUp:"代表一次重要的觉醒和重新评估，过去的经历都在为现在的选择铺路。",
+     kwRev:["自我否定","逃避审视","错失机会"], meaningRev:"提醒你别太苛责过去的自己，该翻篇的事情，翻篇就好。"},
+    {roman:"XXI", name:"世界", emoji:"🌍",
+     kwUp:["完成","圆满","整合"], meaningUp:"代表一个阶段的圆满完成，你已经走了很远，值得为自己鼓掌，新的篇章也在等着你。",
+     kwRev:["未完成","缺一口气","延迟的圆满"], meaningRev:"提醒你可能还差最后一点点努力，圆满就在不远处，别在终点前松劲。"}
+  ];
+
+  const LINES = {
+    start: ["来来来，哥哥给你占一卦～","选一张吧，凭直觉来，别想太多","闭上眼睛，跟着感觉走，选中哪张都是缘分"],
+    reveal_generic: ["哎，这张牌，哥哥掐指一算，还挺有意思的～","嗯～这张牌好像挺贴合你现在的状态","哥哥看着这张牌，第一反应是‘还挺准的’","这张牌能量很足呀，好好感受一下","这张牌，哥哥觉得跟你有点像"],
+    reveal_gentle: ["这张牌看着唬人，其实寓意没那么吓人啦，别自己吓自己","塔罗里这种牌代表的是‘转变’，不是坏事，哥哥陪着你","这张牌就是提醒你该变一变啦，别往心里去","别慌别慌，这张牌换个角度看，其实是好事","塔罗牌就图个乐呵，别太往心里去，哥哥陪你随便看看"]
+  };
+  let lastLine = "";
+  function pick(cat){
+    const arr = LINES[cat];
+    let choice = arr[Math.floor(Math.random()*arr.length)];
+    if(arr.length>1 && choice===lastLine) choice = arr[(arr.indexOf(choice)+1)%arr.length];
+    lastLine = choice;
+    return choice;
+  }
+  function showBubble(text){
+    const el = document.getElementById('bubbleText');
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.textContent = text;
+    el.style.animation = 'floatIn .35s ease';
+  }
+  function updateStatus(text){ document.getElementById('status').textContent = text; }
+
+  const deckGrid = document.getElementById('deckGrid');
+  const resultPanel = document.getElementById('resultPanel');
+  const resultCardFace = document.getElementById('resultCardFace');
+  const resultName = document.getElementById('resultName');
+  const resultOrient = document.getElementById('resultOrient');
+  const resultKeywords = document.getElementById('resultKeywords');
+  const resultMeaning = document.getElementById('resultMeaning');
+  const drawAgainBtn = document.getElementById('drawAgainBtn');
+
+  const GENTLE_CARDS = new Set(["死神","高塔","恶魔"]);
+
+  let deckMap = [];
+  let picked = false;
+
+  function shuffleDeck(){
+    const pool = [...MAJOR_ARCANA];
+    for(let i=pool.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [pool[i],pool[j]] = [pool[j],pool[i]];
+    }
+    deckMap = pool.slice(0, GRID_COUNT).map(card => ({
+      card, reversed: Math.random() < 0.5
+    }));
+    picked = false;
+    renderGrid();
+    resultPanel.style.display = 'none';
+    showBubble(pick('start'));
+    updateStatus('从下面选一张牌吧～');
+  }
+
+  function renderGrid(){
+    deckGrid.innerHTML = '';
+    deckMap.forEach((entry, idx) => {
+      const c = document.createElement('div');
+      c.className = 'card-back';
+      c.textContent = '✦';
+      c.addEventListener('click', () => onPick(idx));
+      deckGrid.appendChild(c);
+    });
+  }
+
+  function onPick(idx){
+    if(picked) return;
+    picked = true;
+    const {card, reversed} = deckMap[idx];
+    const cells = deckGrid.children;
+    for(let i=0;i<cells.length;i++){
+      if(i===idx){
+        cells[i].classList.add('chosen');
+        cells[i].textContent = card.emoji;
+      } else {
+        cells[i].classList.add('dim');
+      }
+    }
+    updateStatus('哥哥在翻牌……');
+    setTimeout(() => showResult(card, reversed), 480);
+  }
+
+  function showResult(card, reversed){
+    resultPanel.style.display = 'flex';
+    resultCardFace.textContent = card.emoji;
+    resultName.textContent = card.roman + ' · ' + card.name;
+    resultOrient.textContent = reversed ? '逆位' : '正位';
+    resultKeywords.textContent = (reversed ? card.kwRev : card.kwUp).join(' · ');
+    resultMeaning.textContent = reversed ? card.meaningRev : card.meaningUp;
+
+    const gentle = GENTLE_CARDS.has(card.name);
+    showBubble(pick(gentle ? 'reveal_gentle' : 'reveal_generic'));
+    updateStatus('这张牌，哥哥觉得挺贴切的～');
+  }
+
+  drawAgainBtn.addEventListener('click', shuffleDeck);
+
+  shuffleDeck();
+})();
+</script>
+</body>
+</html>
