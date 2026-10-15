@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>贝贝的塔罗小屋</title>
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+:root{--bg:#171226;--fg:#f1e9d8;--mut:#a89fbd;--gold:#e0b862;--card:#2a2145;--line:#4a3d75;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f0e4;--fg:#2b2340;--mut:#6d6386;--gold:#a77a17;--card:#e9dfff;--line:#b9a8e6}}
+:root[data-theme="dark"]{--bg:#171226;--fg:#f1e9d8;--mut:#a89fbd;--gold:#e0b862;--card:#2a2145;--line:#4a3d75}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"PingFang SC","Microsoft YaHei",serif,sans-serif;text-align:center}
+main{max-width:860px;margin:0 auto;padding:20px 14px 40px}
+h1{color:var(--gold);margin:6px 0;font-size:26px;letter-spacing:4px}
+.mode{display:flex;justify-content:center;gap:8px;margin:10px 0}.mode button{background:transparent;color:var(--mut);border:1px solid var(--line);border-radius:18px;padding:7px 16px;font-size:14px;cursor:pointer}.mode button.on{background:var(--gold);color:#241a3a;border-color:var(--gold);font-weight:bold}
+.tip{color:var(--mut);font-size:14px;min-height:22px;margin:0 0 16px}
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
+.slot{background:rgba(127,100,200,.1);border:1px solid var(--line);border-radius:14px;padding:12px}
+.lab{color:var(--gold);font-weight:bold;letter-spacing:2px}
+.flip{width:108px;height:172px;margin:10px auto;perspective:700px}
+.inner{position:relative;width:100%;height:100%;transition:transform .8s;transform-style:preserve-3d}
+.flip.on .inner{transform:rotateY(180deg)}
+.face,.back{position:absolute;inset:0;border-radius:10px;backface-visibility:hidden;border:2px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.back{background:repeating-linear-gradient(45deg,var(--card),var(--card) 6px,var(--line) 6px,var(--line) 7px);font-size:28px;color:var(--gold)}
+.empty .back{opacity:.35;border-style:dashed}
+.face{transform:rotateY(180deg);background:var(--card)}
+.face .sym{font-size:46px}.face .sym.rev{transform:rotate(180deg)}
+.face .nm{font-size:15px;margin-top:8px;color:var(--gold)}
+.rd{font-size:14px;line-height:1.7;text-align:left;opacity:0;transition:opacity 1s .5s;min-height:20px}
+.rd.on{opacity:1}
+.rd b{color:var(--gold)}.rd .pos{color:var(--mut);font-size:13px}
+.deck{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:8px 0 18px}
+.c{width:44px;height:70px;border-radius:6px;border:1px solid var(--gold);cursor:pointer;background:repeating-linear-gradient(45deg,var(--card),var(--card) 5px,var(--line) 5px,var(--line) 6px);transition:transform .2s,opacity .3s;padding:0}
+.c:hover:not(:disabled){transform:translateY(-8px);box-shadow:0 6px 14px rgba(224,184,98,.35)}
+.c:disabled{opacity:.12;cursor:default}
+.sum{max-width:640px;margin:0 auto 16px;padding:14px;border:1px solid var(--gold);border-radius:12px;font-size:15px;line-height:1.8;text-align:left;display:none}
+.sum.on{display:block}
+button.go{background:var(--gold);color:#241a3a;border:0;border-radius:20px;padding:10px 26px;font-size:15px;cursor:pointer;font-weight:bold}
+</style>
+</head>
+<body>
+<main>
+<h1>✦ 贝贝的塔罗小屋 ✦</h1>
+<div class="mode"><button data-m="major" class="on">✨ 大牌 22 张</button><button data-m="all">🃏 全牌 78 张</button></div>
+<p class="tip" id="tip"></p>
+<div class="slots" id="slots"></div>
+<div class="sum" id="sum"></div>
+<div class="deck" id="deck"></div>
+<button class="go" id="reset">🔮 重新洗牌</button>
+<p class="tip" style="margin-top:18px">娱乐小游戏，牌只是一面镜子，答案还是在你心里 ♡</p>
+</main>
+<script>
+const CARDS=[
+["愚者","🃏","新的开始、自由、无畏地踏出第一步","鲁莽、犹豫不决、想法不切实际"],
+["魔术师","🎩","创造力、行动力，你手里资源已经够用","能力没发挥、虚张声势或被操控"],
+["女祭司","🌙","直觉、内在智慧，安静观察会有答案","忽视直觉、压抑内心、藏着秘密"],
+["皇后","👑","丰盛、被爱与滋养，享受生活的美好","过度付出、依赖他人、创造力受阻"],
+["皇帝","🏛️","秩序、稳定、责任感与掌控力","控制欲强、过于僵化、缺乏边界"],
+["教皇","📿","传统、信念、值得信任的引导","盲从规则，或想打破束缚"],
+["恋人","💞","爱、和谐、一个重要的选择","关系失衡、犹豫不决、价值观冲突"],
+["战车","🛡️","意志力、胜利、笃定前进","失控、方向不明、内心拉扯"],
+["力量","🦁","温柔的勇气、耐心，以柔克刚","自我怀疑、情绪失控、底气不足"],
+["隐者","🏮","独处、内省，向内寻找答案","孤立、逃避、不愿接受指引"],
+["命运之轮","🎡","转机来临、好运流转、周期更替","低谷期、抗拒变化、时机未到"],
+["正义","⚖️","公平、因果、看清真相","偏见、不公、逃避责任"],
+["倒吊人","🙃","换个角度、暂停等待，有舍才有得","停滞不前、无谓的牺牲、拖延"],
+["死神","💀","结束与重生，旧的告别，新的蜕变","放不下过去、抗拒结束"],
+["节制","🍷","平衡、融合、有节奏地慢慢来","失衡、过度、步调紊乱"],
+["恶魔","😈","执念、诱惑、被某种东西绑住","挣脱束缚、开始觉醒"],
+["高塔","⚡","突如其来的变动，虚假崩塌，真相显现","险些逃过、害怕改变、崩塌被延后"],
+["星星","⭐","希望、治愈、灵感，前路有光","失望、信心不足、与希望脱节"],
+["月亮","🌕","不安、潜意识、事情还在迷雾里","迷雾散去、真相浮现、焦虑缓解"],
+["太阳","☀️","喜悦、成功、满满的活力","短暂阴霾、过度乐观"],
+["审判","📯","觉醒、召唤，回顾过去后重新出发","自我怀疑、拒绝反省"],
+["世界","🌍","圆满、完成、整合，一个阶段的成就","尚未完成、差最后一步"]
+];
+const S=[["权杖","🔥","事业与热情"],["圣杯","💧","感情与情绪"],["宝剑","⚔️","思维与决断"],["星币","🪙","金钱与生活"]];
+const R=[["王牌","迎来全新的契机与潜力","契机被延误，起步不顺"],["二","面临选择，需要保持平衡","犹豫不决，失去平衡"],["三","有成长、合作与初步成果","配合不畅，进展缓慢"],["四","趋于稳定，适合休整巩固","停滞不前，或不愿改变"],["五","出现摩擦与挫折，考验你的韧性","冲突缓和，慢慢走出低谷"],["六","逐渐好转，有付出也有回馈","回报不均，难以放下过去"],["七","需要坚持立场，谨慎权衡","缺乏信心，容易动摇"],["八","快速推进，全心投入","进度受阻，节奏混乱"],["九","接近圆满，靠自己积累出底气","疲惫焦虑，自我设限"],["十","走到阶段的终点，圆满，也可能背着重担","重担难卸，或结局不如预期"],["侍从","保持好奇，可能收到新消息","消息延迟，心态不够成熟"],["骑士","积极行动，勇往直前","冲动急躁，或行动迟缓"],["王后","成熟温柔，内外兼顾","情绪化，缺乏安全感"],["国王","稳重有担当，值得信赖","独断专行，或控制欲过强"]];
+S.forEach(([n,e,d])=>R.forEach(([r,u,v])=>CARDS.push([n+r,e,`在${d}上，${u}`,`在${d}上，${v}`])));
+let MODE="major";
+const POS=[["过去","这是影响你的根源，走过的路："],["现在","这是你此刻的状态与能量："],["未来","这是接下来的趋势，可以留意："]];
+let deck,picked;
+const $=id=>document.getElementById(id);
+function init(){
+  deck=(MODE==="major"?CARDS.slice(0,22):CARDS).map((c,i)=>({i,rev:Math.random()<.5})).sort(()=>Math.random()-.5);
+  picked=[];
+  $("tip").textContent="深呼吸，心里默想你的问题，然后从下面凭直觉点选 3 张牌 ✨";
+  $("sum").className="sum";
+  $("slots").innerHTML=POS.map((p,k)=>`<div class="slot"><div class="lab">${p[0]}</div><div class="flip empty" id="f${k}"><div class="inner"><div class="back">?</div><div class="face" id="fc${k}"></div></div></div><div class="rd" id="rd${k}"></div></div>`).join("");
+  $("deck").innerHTML=deck.map((d,k)=>`<button class="c" data-k="${k}" aria-label="选牌"></button>`).join("");
+  document.querySelectorAll(".c").forEach(b=>b.onclick=()=>pick(b));
+}
+function pick(b){
+  if(picked.length>=3)return;
+  const k=+b.dataset.k,d=deck[k],n=picked.length,c=CARDS[d.i];
+  picked.push(d);b.disabled=true;
+  $("fc"+n).innerHTML=`<div class="sym ${d.rev?"rev":""}">${c[1]}</div><div class="nm">${c[0]}${d.rev?"（逆位）":"（正位）"}</div>`;
+  const f=$("f"+n);f.classList.remove("empty");
+  setTimeout(()=>f.classList.add("on"),60);
+  const r=$("rd"+n);
+  r.innerHTML=`<span class="pos">${POS[n][1]}</span><br><b>${c[0]}·${d.rev?"逆位":"正位"}</b><br>${d.rev?c[3]:c[2]}`;
+  setTimeout(()=>r.classList.add("on"),60);
+  if(picked.length===3){
+    $("tip").textContent="三张牌都翻开啦，慢慢看～";
+    const w=picked.map(x=>x.rev?"逆位":"正位");
+    const up=picked.filter(x=>!x.rev).length;
+    const mood=up>=2?"整体能量偏顺畅，多数牌在正位，顺着心意往前走就好。":up===1?"顺逆参半，说明有些事需要你多留意、调整一下节奏。":"逆位偏多，不是坏事，是提醒你先停一停，看看哪里被卡住了。";
+    setTimeout(()=>{$("sum").innerHTML=`<b style="color:var(--gold)">✦ 三牌串读 ✦</b><br>从「${CARDS[picked[0].i][0]}」走到「${CARDS[picked[1].i][0]}」，再迎向「${CARDS[picked[2].i][0]}」。${mood}`;$("sum").className="sum on"},1400);
+  }
+}
+$("reset").onclick=init;
+document.querySelectorAll(".mode button").forEach(b=>b.onclick=()=>{MODE=b.dataset.m;document.querySelectorAll(".mode button").forEach(x=>x.classList.toggle("on",x===b));init()});
+init();
+</script>
+</body>
+</html>
